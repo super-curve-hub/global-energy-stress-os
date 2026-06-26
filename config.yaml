@@ -1,45 +1,173 @@
+# ==========================================================
+# Global Energy Stress OS
+# Configuration
+# ==========================================================
+
 project:
   name: Global Energy Stress OS
+  version: "0.1.0"
+  author: Super Curve
   timezone: Asia/Tokyo
-  start_date: '2021-01-01'
+  start_date: "2021-01-01"
+
+# ==========================================================
+# Market Layer
+# ==========================================================
 
 market:
+
+  lookback_days: 365
+
   tickers:
+
     WTI: CL=F
     BRENT: BZ=F
     OVX: ^OVX
     MOVE: ^MOVE
+
     DXY: DX-Y.NYB
     USDJPY: JPY=X
-    XLE: XLE
-    SPX: ^GSPC
+
     GOLD: GC=F
     COPPER: HG=F
+
+    SPX: ^GSPC
+    XLE: XLE
+
     VIX: ^VIX
     VVIX: ^VVIX
     SKEW: ^SKEW
 
+# ==========================================================
+# News Layer
+# ==========================================================
+
 news:
+
   google_queries:
+
     - Hormuz Strait oil
+    - Hormuz shipping
     - Iran oil shipping
     - Middle East tanker
     - oil supply disruption
     - Saudi OSP crude
-    - war risk premium tanker
+    - Dubai Brent spread
+    - Brent backwardation
+    - War Risk Premium tanker
+    - VLCC freight
+
   gdelt_queries:
+
     - Hormuz Strait
     - Iran oil
     - oil supply disruption
     - Middle East tanker
+    - Saudi OSP
+    - VLCC
+
   rss_feeds:
+
+    - https://news.google.com/rss/search?q=Hormuz
+    - https://news.google.com/rss/search?q=Iran+Oil
+    - https://news.google.com/rss/search?q=Saudi+OSP
+
     - https://www.imo.org/en/MediaCentre/PressBriefings/Pages/rss.aspx
 
-model:
-  z_span: 60
+# ==========================================================
+# Feature Engineering
+# ==========================================================
+
+features:
+
+  rolling_window: 60
+
+  ewma_span: 30
+
   z_clip: 3.0
+
+# ==========================================================
+# Regime Model
+# ==========================================================
+
+model:
+
   hormuz_logit_intercept: -1.35
 
+  war_score_warning: 0.50
+
+  war_score_high: 1.50
+
+  hormuz_warning: 0.30
+
+  hormuz_high: 0.50
+
+# ==========================================================
+# Dashboard
+# ==========================================================
+
+dashboard:
+
+  title: Global Energy Stress Dashboard
+
+  save_png: true
+
+  save_html: true
+
+  save_markdown: true
+
+  save_csv: true
+
+# ==========================================================
+# Output
+# ==========================================================
+
 outputs:
-  dir: outputs
+
+  output_dir: outputs
+
   docs_dir: docs
+
+  csv: dashboard.csv
+
+  markdown: dashboard.md
+
+  html: dashboard.html
+
+  png: dashboard.png
+
+# ==========================================================
+# Logging
+# ==========================================================
+
+logging:
+
+  level: INFO
+
+  save_log: true
+
+  logfile: global_energy_stress.log
+
+# ==========================================================
+# Future Modules (v5)
+# ==========================================================
+
+future:
+
+  saudi_osp: false
+
+  vlcc: false
+
+  war_risk: false
+
+  dubai_brent: false
+
+  brent_timespread: false
+
+  ais: false
+
+  ollama: false
+
+  llm_commentary: false
+
+  github_pages: true
