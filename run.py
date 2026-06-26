@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 import re
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import quote
 
@@ -12,16 +12,15 @@ import numpy as np
 import pandas as pd
 import requests
 
+from engine.market import fetch_market
 from engine.utils import (
     ROOT,
-    load_config,
     ensure_dirs,
     ewma_zscore,
-    sigmoid,
     get_logger,
+    load_config,
+    sigmoid,
 )
-
-from engine.market import fetch_market
 
 logger = get_logger()
 
@@ -29,6 +28,7 @@ logger = get_logger()
 # ============================================================
 # NEWS LAYER
 # ============================================================
+
 
 def google_news_count(query: str) -> int:
     url = (
@@ -125,6 +125,7 @@ def fetch_headlines(cfg: dict) -> pd.DataFrame:
 # FEATURE ENGINE
 # ============================================================
 
+
 def compute_features(px: pd.DataFrame, news: pd.DataFrame, cfg: dict) -> pd.DataFrame:
     feature_cfg = cfg.get("features", {})
     model_cfg = cfg.get("model", {})
@@ -176,8 +177,7 @@ def compute_features(px: pd.DataFrame, news: pd.DataFrame, cfg: dict) -> pd.Data
 
     df["Energy_Relative_z"] = (
         ewma_zscore(
-            ret["XLE"].rolling(20).sum()
-            - ret["SPX"].rolling(20).sum(),
+            ret["XLE"].rolling(20).sum() - ret["SPX"].rolling(20).sum(),
             span,
             clip,
         )
@@ -186,31 +186,19 @@ def compute_features(px: pd.DataFrame, news: pd.DataFrame, cfg: dict) -> pd.Data
     )
 
     df["Dollar_Stress_z"] = (
-        ewma_zscore(ret["DXY"].rolling(5).sum(), span, clip)
-        if has("DXY")
-        else 0.0
+        ewma_zscore(ret["DXY"].rolling(5).sum(), span, clip) if has("DXY") else 0.0
     )
 
-    df["Rates_Vol_z"] = (
-        ewma_zscore(px["MOVE"], span, clip)
-        if has("MOVE")
-        else 0.0
-    )
+    df["Rates_Vol_z"] = ewma_zscore(px["MOVE"], span, clip) if has("MOVE") else 0.0
 
-    df["Oil_Vol_z"] = (
-        ewma_zscore(px["OVX"], span, clip)
-        if has("OVX")
-        else 0.0
-    )
+    df["Oil_Vol_z"] = ewma_zscore(px["OVX"], span, clip) if has("OVX") else 0.0
 
     df["VIX_z"] = ewma_zscore(px["VIX"], span, clip) if has("VIX") else 0.0
     df["VVIX_z"] = ewma_zscore(px["VVIX"], span, clip) if has("VVIX") else 0.0
     df["SKEW_z"] = ewma_zscore(px["SKEW"], span, clip) if has("SKEW") else 0.0
 
     df["Option_Skew_z"] = (
-        df[["Oil_Vol_z", "VIX_z", "VVIX_z", "SKEW_z"]]
-        .mean(axis=1)
-        .clip(-clip, clip)
+        df[["Oil_Vol_z", "VIX_z", "VVIX_z", "SKEW_z"]].mean(axis=1).clip(-clip, clip)
     )
 
     today_count = float(news["count"].sum()) if len(news) else 0.0
@@ -291,6 +279,7 @@ def compute_features(px: pd.DataFrame, news: pd.DataFrame, cfg: dict) -> pd.Data
 # ============================================================
 # REPORT ENGINE
 # ============================================================
+
 
 def make_markdown(df: pd.DataFrame, news: pd.DataFrame, out_path: Path) -> None:
     latest = df.iloc[-1]
@@ -411,6 +400,7 @@ def make_png(df: pd.DataFrame, out_path: Path) -> None:
 # ============================================================
 # MAIN
 # ============================================================
+
 
 def main() -> None:
     cfg = load_config()

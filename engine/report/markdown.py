@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+
 import pandas as pd
 
 
@@ -21,7 +22,9 @@ def build_commentary(latest: pd.Series) -> str:
     return f"{base} ホルムズ閉鎖確率は {hp:.1%}、レジームは {regime} です。"
 
 
-def save_markdown(df: pd.DataFrame, articles: pd.DataFrame, output_path: str = "outputs/dashboard.md") -> None:
+def save_markdown(
+    df: pd.DataFrame, articles: pd.DataFrame, output_path: str = "outputs/dashboard.md"
+) -> None:
     latest = df.iloc[-1]
     lines = []
     lines.append("# Global Energy Stress OS")
@@ -31,7 +34,9 @@ def save_markdown(df: pd.DataFrame, articles: pd.DataFrame, output_path: str = "
     lines.append("## Headline")
     lines.append("")
     lines.append(f"- **War Premium Score:** {latest['War_Premium_Score']:.2f}")
-    lines.append(f"- **Hormuz Closure Probability:** {latest['Hormuz_Closure_Prob']:.2%}")
+    lines.append(
+        f"- **Hormuz Closure Probability:** {latest['Hormuz_Closure_Prob']:.2%}"
+    )
     lines.append(f"- **Regime:** {latest['Regime']}")
     lines.append("")
     lines.append("## Stress Indices")

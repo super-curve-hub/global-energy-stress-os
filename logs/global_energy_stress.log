@@ -1,0 +1,32 @@
+2026-06-26 02:23:48,389 | INFO | Logger initialized.
+2026-06-26 02:23:48,919 | INFO | Downloaded ^GSPC (370 rows)
+2026-06-26 02:23:48,923 | INFO | Market cache saved.
+2026-06-26 02:30:09,202 | INFO | Logger initialized.
+2026-06-26 02:30:09,210 | INFO | ============================================================
+2026-06-26 02:30:09,211 | INFO | Global Energy Stress OS
+2026-06-26 02:30:09,211 | INFO | ============================================================
+2026-06-26 02:30:09,573 | INFO | Downloaded CL=F (1377 rows)
+2026-06-26 02:30:09,654 | INFO | Downloaded BZ=F (1378 rows)
+2026-06-26 02:30:09,740 | INFO | Downloaded ^OVX (1375 rows)
+2026-06-26 02:30:09,839 | INFO | Downloaded ^MOVE (1363 rows)
+2026-06-26 02:30:09,928 | INFO | Downloaded DX-Y.NYB (1377 rows)
+2026-06-26 02:30:10,028 | INFO | Downloaded JPY=X (1425 rows)
+2026-06-26 02:30:10,134 | INFO | Downloaded GC=F (1377 rows)
+2026-06-26 02:30:10,227 | INFO | Downloaded HG=F (1378 rows)
+2026-06-26 02:30:10,292 | INFO | Downloaded ^GSPC (1375 rows)
+2026-06-26 02:30:10,608 | INFO | Downloaded XLE (1375 rows)
+2026-06-26 02:30:10,737 | INFO | Downloaded ^VIX (1376 rows)
+2026-06-26 02:30:10,852 | INFO | Downloaded ^VVIX (1369 rows)
+2026-06-26 02:30:10,936 | INFO | Downloaded ^SKEW (1335 rows)
+2026-06-26 02:30:10,979 | INFO | Market cache saved.
+2026-06-26 02:30:10,980 | INFO | Market Layer completed.
+2026-06-26 02:30:30,495 | WARNING | GDELT status 429 for Hormuz Strait
+2026-06-26 02:30:42,649 | WARNING | GDELT status 429 for Iran oil
+2026-06-26 02:31:13,635 | WARNING | GDELT status 429 for Middle East tanker
+2026-06-26 02:31:25,646 | WARNING | GDELT status 429 for Saudi OSP
+2026-06-26 02:31:37,962 | WARNING | GDELT status 429 for VLCC
+2026-06-26 02:31:42,454 | INFO | Completed.
+2026-06-26 02:31:42,454 | INFO | Date: 2026-06-25
+2026-06-26 02:31:42,454 | INFO | War Premium Score: 0.415
+2026-06-26 02:31:42,454 | INFO | Hormuz Closure Probability: 27.35 %
+2026-06-26 02:31:42,454 | INFO | Regime: Headline Repricing

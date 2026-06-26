@@ -8,7 +8,6 @@ Author: Super Curve
 
 from __future__ import annotations
 
-
 import pandas as pd
 import yfinance as yf
 
@@ -94,28 +93,18 @@ def validate_market(
     px = px.ffill()
 
     required = [
-
         "WTI",
         "BRENT",
         "DXY",
         "SPX",
         "USDJPY",
-
     ]
 
-    cols = [
-
-        c
-        for c in required
-        if c in px.columns
-
-    ]
+    cols = [c for c in required if c in px.columns]
 
     if cols:
 
-        px = px.dropna(
-            subset=cols
-        )
+        px = px.dropna(subset=cols)
 
     return px
 
@@ -185,9 +174,7 @@ def fetch_market_data(
 
     if len(series) == 0:
 
-        raise RuntimeError(
-            "No market data downloaded."
-        )
+        raise RuntimeError("No market data downloaded.")
 
     px = pd.concat(
         series,
@@ -222,21 +209,15 @@ def fetch_market(
 
             return cache
 
-    start = cfg["project"][
-        "start_date"
-    ]
+    start = cfg["project"]["start_date"]
 
-    tickers = cfg[
-        "market"
-    ]["tickers"]
+    tickers = cfg["market"]["tickers"]
 
     px = fetch_market_data(
         tickers,
         start,
     )
 
-    logger.info(
-        "Market Layer completed."
-    )
+    logger.info("Market Layer completed.")
 
     return px

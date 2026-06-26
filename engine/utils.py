@@ -80,9 +80,7 @@ def get_logger() -> logging.Logger:
 
     logger.setLevel(logging.INFO)
 
-    formatter = logging.Formatter(
-        "%(asctime)s | %(levelname)s | %(message)s"
-    )
+    formatter = logging.Formatter("%(asctime)s | %(levelname)s | %(message)s")
 
     #
     # Console
@@ -148,11 +146,7 @@ def ewma_zscore(
 
     z = (s - mean) / std
 
-    return (
-        z.replace([np.inf, -np.inf], np.nan)
-        .fillna(0.0)
-        .clip(-clip, clip)
-    )
+    return z.replace([np.inf, -np.inf], np.nan).fillna(0.0).clip(-clip, clip)
 
 
 def bounded_series(
@@ -163,12 +157,7 @@ def bounded_series(
     Replace NaN/Inf and clip values.
     """
 
-    return (
-        pd.Series(x)
-        .replace([np.inf, -np.inf], np.nan)
-        .fillna(0.0)
-        .clip(-clip, clip)
-    )
+    return pd.Series(x).replace([np.inf, -np.inf], np.nan).fillna(0.0).clip(-clip, clip)
 
 
 # ==========================================================

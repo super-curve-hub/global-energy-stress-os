@@ -1,13 +1,16 @@
 from __future__ import annotations
 
-import time
 import random
+import time
 from urllib.parse import quote
-import requests
+
 import pandas as pd
+import requests
 
 
-def gdelt_timeline(keyword: str, timespan: str = "90d", retries: int = 3) -> dict | None:
+def gdelt_timeline(
+    keyword: str, timespan: str = "90d", retries: int = 3
+) -> dict | None:
     url = (
         "https://api.gdeltproject.org/api/v2/doc/doc?"
         f"query={quote(keyword)}&mode=timelinevolraw&format=json&timespan={timespan}"
@@ -16,7 +19,7 @@ def gdelt_timeline(keyword: str, timespan: str = "90d", retries: int = 3) -> dic
         try:
             r = requests.get(url, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
             if r.status_code == 429:
-                wait = 1.5 * (2 ** i) + random.random()
+                wait = 1.5 * (2**i) + random.random()
                 print(f"[gdelt] 429 {keyword}, retry in {wait:.1f}s")
                 time.sleep(wait)
                 continue
@@ -30,7 +33,9 @@ def gdelt_timeline(keyword: str, timespan: str = "90d", retries: int = 3) -> dic
     return None
 
 
-def fetch_gdelt_news_index(keywords: list[str], index: pd.DatetimeIndex) -> pd.DataFrame:
+def fetch_gdelt_news_index(
+    keywords: list[str], index: pd.DatetimeIndex
+) -> pd.DataFrame:
     rows = []
     for kw in keywords:
         data = gdelt_timeline(kw)
@@ -40,7 +45,13 @@ def fetch_gdelt_news_index(keywords: list[str], index: pd.DatetimeIndex) -> pd.D
             dt = item.get("date")
             val = item.get("value", 0)
             if dt:
-                rows.append({"Date": pd.to_datetime(dt).normalize(), "keyword": kw, "value": float(val)})
+                rows.append(
+                    {
+                        "Date": pd.to_datetime(dt).normalize(),
+                        "keyword": kw,
+                        "value": float(val),
+                    }
+                )
     if not rows:
         return pd.DataFrame({"GDELT_News": 0.0}, index=index)
     df = pd.DataFrame(rows)

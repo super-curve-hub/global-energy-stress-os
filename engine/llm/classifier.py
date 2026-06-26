@@ -2,20 +2,80 @@ from __future__ import annotations
 
 import json
 import re
-import requests
-import pandas as pd
 
-SHIPPING_TERMS = ["tanker", "vlcc", "ship", "shipping", "strait", "hormuz", "red sea", "reroute", "vessel", "port", "ais"]
-ENERGY_TERMS = ["oil", "crude", "brent", "wti", "opec", "saudi", "osp", "supply", "export", "refinery", "gas", "lng"]
-MILITARY_TERMS = ["iran", "israel", "missile", "drone", "navy", "attack", "strike", "military", "war", "seized", "threat"]
-PHYSICAL_TERMS = ["premium", "insurance", "freight", "spread", "backwardation", "contango", "inventory", "loading", "delay", "disruption"]
-NEGATIVE_TERMS = ["ceasefire", "resume", "reopen", "de-escalation", "eases", "normal", "agreement", "waiver"]
+import pandas as pd
+import requests
+
+SHIPPING_TERMS = [
+    "tanker",
+    "vlcc",
+    "ship",
+    "shipping",
+    "strait",
+    "hormuz",
+    "red sea",
+    "reroute",
+    "vessel",
+    "port",
+    "ais",
+]
+ENERGY_TERMS = [
+    "oil",
+    "crude",
+    "brent",
+    "wti",
+    "opec",
+    "saudi",
+    "osp",
+    "supply",
+    "export",
+    "refinery",
+    "gas",
+    "lng",
+]
+MILITARY_TERMS = [
+    "iran",
+    "israel",
+    "missile",
+    "drone",
+    "navy",
+    "attack",
+    "strike",
+    "military",
+    "war",
+    "seized",
+    "threat",
+]
+PHYSICAL_TERMS = [
+    "premium",
+    "insurance",
+    "freight",
+    "spread",
+    "backwardation",
+    "contango",
+    "inventory",
+    "loading",
+    "delay",
+    "disruption",
+]
+NEGATIVE_TERMS = [
+    "ceasefire",
+    "resume",
+    "reopen",
+    "de-escalation",
+    "eases",
+    "normal",
+    "agreement",
+    "waiver",
+]
 
 
 def _score_text(text: str) -> dict:
     t = text.lower()
+
     def count(terms):
         return sum(1 for w in terms if w in t)
+
     shipping = min(10, count(SHIPPING_TERMS) * 2)
     energy = min(10, count(ENERGY_TERMS) * 2)
     military = min(10, count(MILITARY_TERMS) * 2)
@@ -38,7 +98,9 @@ def _score_text(text: str) -> dict:
     }
 
 
-def classify_with_ollama(text: str, endpoint: str, model: str, timeout_sec: int = 30) -> dict | None:
+def classify_with_ollama(
+    text: str, endpoint: str, model: str, timeout_sec: int = 30
+) -> dict | None:
     prompt = f"""
 You are an energy and shipping geopolitical risk classifier.
 Return JSON only with keys: shipping, energy, military, physical, confidence, summary.
@@ -46,7 +108,11 @@ Scores must be 0-10.
 Text: {text[:3000]}
 """.strip()
     try:
-        r = requests.post(endpoint, json={"model": model, "prompt": prompt, "stream": False}, timeout=timeout_sec)
+        r = requests.post(
+            endpoint,
+            json={"model": model, "prompt": prompt, "stream": False},
+            timeout=timeout_sec,
+        )
         if r.status_code != 200:
             return None
         raw = r.json().get("response", "")
@@ -76,5 +142,16 @@ def classify_articles(articles: pd.DataFrame, llm_cfg: dict) -> pd.DataFrame:
             result = _score_text(text)
         rows.append({**row.to_dict(), **result})
     if not rows:
-        return pd.DataFrame(columns=list(articles.columns) + ["shipping", "energy", "military", "physical", "confidence", "summary", "method"])
+        return pd.DataFrame(
+            columns=list(articles.columns)
+            + [
+                "shipping",
+                "energy",
+                "military",
+                "physical",
+                "confidence",
+                "summary",
+                "method",
+            ]
+        )
     return pd.DataFrame(rows)
