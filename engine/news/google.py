@@ -5,7 +5,6 @@ import urllib.parse
 import feedparser
 import pandas as pd
 
-
 GOOGLE_RSS = "https://news.google.com/rss/search?q={query}"
 
 
@@ -35,9 +34,7 @@ def fetch_google_news(
 
     for query in queries:
 
-        url = GOOGLE_RSS.format(
-            query=urllib.parse.quote(query)
-        )
+        url = GOOGLE_RSS.format(query=urllib.parse.quote(query))
 
         url += f"&hl={language}&gl={country}&ceid={country}:{language}"
 
@@ -76,9 +73,6 @@ def fetch_google_news(
         utc=True,
     )
 
-    df = (
-        df.sort_values("published", ascending=False)
-        .reset_index(drop=True)
-    )
+    df = df.sort_values("published", ascending=False).reset_index(drop=True)
 
     return df

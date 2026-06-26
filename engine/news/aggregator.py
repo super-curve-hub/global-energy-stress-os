@@ -9,28 +9,28 @@ from .schema import normalize_news
 
 def fetch_news(cfg: dict) -> pd.DataFrame:
     """
-    Aggregate news feeds.
+    Aggregate all news sources.
 
     Phase 4
     --------
-    Google News RSS
-    RSS Feeds
+    - Google News RSS
+    - RSS Feeds
 
     Phase 5
     --------
-    GDELT
-    Reuters
-    MarineTraffic
-    AIS
+    - GDELT News Index
+    - Reuters
+    - MarineTraffic
+    - AIS
     """
 
     news_cfg = cfg["news"]
 
     frames: list[pd.DataFrame] = []
 
-    # ----------------------------------
+    # -------------------------------------------------
     # Google News
-    # ----------------------------------
+    # -------------------------------------------------
 
     google = fetch_google_news(news_cfg.get("google_queries", []))
 
@@ -42,15 +42,15 @@ def fetch_news(cfg: dict) -> pd.DataFrame:
 
     frames.append(google)
 
-    # ----------------------------------
-    # RSS Feeds
-    # ----------------------------------
+    # -------------------------------------------------
+    # RSS
+    # -------------------------------------------------
 
-    rss_feeds = news_cfg.get("rss_feeds", [])
+    rss_urls = news_cfg.get("rss_feeds", [])
 
-    if rss_feeds:
+    if rss_urls:
 
-        rss = fetch_rss(rss_feeds)
+        rss = fetch_rss(rss_urls)
 
         rss = normalize_news(
             rss,
@@ -60,12 +60,11 @@ def fetch_news(cfg: dict) -> pd.DataFrame:
 
         frames.append(rss)
 
-    # ----------------------------------
+    # -------------------------------------------------
     # Merge
-    # ----------------------------------
+    # -------------------------------------------------
 
     if not frames:
-
         return pd.DataFrame()
 
     news = pd.concat(
@@ -74,15 +73,13 @@ def fetch_news(cfg: dict) -> pd.DataFrame:
         sort=False,
     )
 
-    if len(news):
-
-        news = (
-            news.drop_duplicates(subset=["title", "url"])
-            .sort_values(
-                "published",
-                ascending=False,
-            )
-            .reset_index(drop=True)
+    news = (
+        news.drop_duplicates(subset=["title", "url"])
+        .sort_values(
+            "published",
+            ascending=False,
         )
+        .reset_index(drop=True)
+    )
 
     return news

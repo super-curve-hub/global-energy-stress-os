@@ -1,17 +1,17 @@
 # Global Energy Stress OS
 
-Generated: 2026-06-26 11:31 JST
+Generated: 2026-06-26 12:24 JST
 
 ## Summary
 
-- War Premium Score: **0.42**
-- Hormuz Closure Probability: **27.4%**
+- War Premium Score: **0.41**
+- Hormuz Closure Probability: **27.3%**
 - Regime: **Headline Repricing**
 
 ## Stress Indices
 
-- Shipping Stress: 0.43
-- Energy Supply Stress: -0.07
+- Shipping Stress: 0.44
+- Energy Supply Stress: -0.10
 - Military Escalation: 0.95
 - News Credibility: 1.21
 
@@ -29,7 +29,7 @@ Generated: 2026-06-26 11:31 JST
 - rss / https://news.google.com/rss/search?q=Saudi+OSP: 100
 - google_news / Dubai Brent spread: 76
 - google_news / War Risk Premium tanker: 75
-- google_news / Brent backwardation: 56
+- google_news / Brent backwardation: 55
 - gdelt / Hormuz Strait: 0
 - gdelt / Iran oil: 0
 - gdelt / oil supply disruption: 0
