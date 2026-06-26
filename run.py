@@ -97,7 +97,7 @@ def fetch_market(cfg: dict) -> pd.DataFrame:
     if not series:
         raise RuntimeError("No market data downloaded")
 
-    px = pd.concat(series, axis=1).sort_index().ffill()
+    px = pd.concat(series, axis=1, sort=False)
 
     required = [c for c in ["WTI", "BRENT", "DXY", "SPX", "USDJPY"] if c in px.columns]
     px = px.dropna(subset=required)
