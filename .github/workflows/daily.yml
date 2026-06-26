@@ -1,0 +1,39 @@
+name: Global Energy Stress OS
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    # 毎日 05:00 JST (20:00 UTC 前日)
+    - cron: "0 20 * * *"
+
+jobs:
+  dashboard:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Global Energy Stress OS
+        run: |
+          python run.py
+
+      - name: Upload dashboard artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashboard
+          path: |
+            outputs/
