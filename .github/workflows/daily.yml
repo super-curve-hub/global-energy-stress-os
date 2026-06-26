@@ -4,10 +4,11 @@ on:
   workflow_dispatch:
 
   schedule:
-    # 毎日 05:00 JST (20:00 UTC 前日)
+    # Every day 05:00 JST (20:00 UTC)
     - cron: "0 20 * * *"
 
 jobs:
+
   dashboard:
 
     runs-on: ubuntu-latest
@@ -22,14 +23,49 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      - name: Upgrade pip
         run: |
           python -m pip install --upgrade pip
+
+      - name: Install dependencies
+        run: |
           pip install -r requirements.txt
+
+      # -----------------------------
+      # Code Quality
+      # -----------------------------
+
+      - name: Ruff
+        run: |
+          ruff check .
+
+      - name: Black
+        run: |
+          black --check .
+
+      - name: isort
+        run: |
+          isort --check-only .
+
+      # -----------------------------
+      # Unit Tests
+      # -----------------------------
+
+      - name: Run Tests
+        run: |
+          pytest -q
+
+      # -----------------------------
+      # Dashboard
+      # -----------------------------
 
       - name: Run Global Energy Stress OS
         run: |
           python run.py
+
+      # -----------------------------
+      # Upload Outputs
+      # -----------------------------
 
       - name: Upload dashboard artifacts
         uses: actions/upload-artifact@v4
@@ -37,3 +73,6 @@ jobs:
           name: dashboard
           path: |
             outputs/
+            docs/
+            logs/
+            data/processed/
