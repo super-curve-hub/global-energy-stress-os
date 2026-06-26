@@ -11,98 +11,19 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import requests
-import yaml
-import yfinance as yf
 
-ROOT = Path(__file__).resolve().parent
+from engine.utils import (
+    ROOT,
+    load_config,
+    ensure_dirs,
+    ewma_zscore,
+    sigmoid,
+    get_logger,
+)
 
+from engine.market import fetch_market
 
-# ============================================================
-# CONFIG / UTILS
-# ============================================================
-
-def load_config() -> dict:
-    with open(ROOT / "config.yaml", "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
-
-
-def ensure_dirs(cfg: dict) -> None:
-    output_dir = cfg.get("outputs", {}).get("output_dir", "outputs")
-    docs_dir = cfg.get("outputs", {}).get("docs_dir", "docs")
-
-    for p in [
-        output_dir,
-        docs_dir,
-        "data/raw",
-        "data/processed",
-        "data/cache",
-    ]:
-        (ROOT / p).mkdir(parents=True, exist_ok=True)
-
-
-def ewma_zscore(x: pd.Series, span: int = 60, clip: float = 3.0) -> pd.Series:
-    x = pd.Series(x).astype(float)
-    mean = x.ewm(span=span, min_periods=20).mean()
-    std = x.ewm(span=span, min_periods=20).std()
-    z = (x - mean) / std
-    return z.replace([np.inf, -np.inf], np.nan).fillna(0.0).clip(-clip, clip)
-
-
-def sigmoid(x):
-    return 1 / (1 + np.exp(-x))
-
-
-# ============================================================
-# MARKET LAYER
-# ============================================================
-
-def safe_download(ticker: str, start: str) -> pd.Series | None:
-    try:
-        data = yf.download(
-            ticker,
-            start=start,
-            auto_adjust=True,
-            progress=False,
-            threads=False,
-        )
-
-        if data is None or len(data) == 0:
-            print(f"WARN: empty download: {ticker}")
-            return None
-
-        close = data["Close"]
-
-        if isinstance(close, pd.DataFrame):
-            close = close.iloc[:, 0]
-
-        close.name = ticker
-        return close.dropna()
-
-    except Exception as e:
-        print(f"WARN: download failed {ticker}: {e}")
-        return None
-
-
-def fetch_market(cfg: dict) -> pd.DataFrame:
-    start = cfg["project"].get("start_date", "2021-01-01")
-    tickers = cfg["market"]["tickers"]
-
-    series = {}
-
-    for name, ticker in tickers.items():
-        s = safe_download(ticker, start)
-        if s is not None:
-            series[name] = s
-
-    if not series:
-        raise RuntimeError("No market data downloaded")
-
-    px = pd.concat(series, axis=1, sort=False)
-
-    required = [c for c in ["WTI", "BRENT", "DXY", "SPX", "USDJPY"] if c in px.columns]
-    px = px.dropna(subset=required)
-
-    return px
+logger = get_logger()
 
 
 # ============================================================
@@ -118,9 +39,8 @@ def google_news_count(query: str) -> int:
     try:
         feed = feedparser.parse(url)
         return len(feed.entries)
-
     except Exception as e:
-        print(f"WARN: Google RSS failed {query}: {e}")
+        logger.warning("Google RSS failed %s: %s", query, e)
         return 0
 
 
@@ -141,7 +61,7 @@ def gdelt_count(query: str) -> int:
         )
 
         if r.status_code != 200:
-            print(f"WARN: GDELT status {r.status_code} for {query}")
+            logger.warning("GDELT status %s for %s", r.status_code, query)
             return 0
 
         data = r.json()
@@ -150,7 +70,7 @@ def gdelt_count(query: str) -> int:
         return int(sum(float(x.get("value", 0)) for x in timeline))
 
     except Exception as e:
-        print(f"WARN: GDELT failed {query}: {e}")
+        logger.warning("GDELT failed %s: %s", query, e)
         return 0
 
 
@@ -158,16 +78,14 @@ def rss_count(feed_url: str) -> int:
     try:
         feed = feedparser.parse(feed_url)
         return len(feed.entries)
-
     except Exception as e:
-        print(f"WARN: RSS failed {feed_url}: {e}")
+        logger.warning("RSS failed %s: %s", feed_url, e)
         return 0
 
 
 def fetch_headlines(cfg: dict) -> pd.DataFrame:
     rows = []
     today = pd.Timestamp.now("UTC").normalize()
-
     news_cfg = cfg.get("news", {})
 
     for q in news_cfg.get("google_queries", []):
@@ -222,10 +140,6 @@ def compute_features(px: pd.DataFrame, news: pd.DataFrame, cfg: dict) -> pd.Data
 
     zero = pd.Series(0.0, index=df.index)
 
-    # --------------------------------------------------------
-    # Core market dislocations
-    # --------------------------------------------------------
-
     if has("BRENT") and has("WTI"):
         df["Brent_WTI"] = px["BRENT"] - px["WTI"]
         df["Brent_WTI_z"] = ewma_zscore(df["Brent_WTI"], span, clip)
@@ -261,7 +175,12 @@ def compute_features(px: pd.DataFrame, news: pd.DataFrame, cfg: dict) -> pd.Data
     )
 
     df["Energy_Relative_z"] = (
-        ewma_zscore(ret["XLE"].rolling(20).sum() - ret["SPX"].rolling(20).sum(), span, clip)
+        ewma_zscore(
+            ret["XLE"].rolling(20).sum()
+            - ret["SPX"].rolling(20).sum(),
+            span,
+            clip,
+        )
         if has("XLE") and has("SPX")
         else 0.0
     )
@@ -294,22 +213,13 @@ def compute_features(px: pd.DataFrame, news: pd.DataFrame, cfg: dict) -> pd.Data
         .clip(-clip, clip)
     )
 
-    # --------------------------------------------------------
-    # News intensity
-    # --------------------------------------------------------
-
     today_count = float(news["count"].sum()) if len(news) else 0.0
 
     nlp_raw = pd.Series(0.0, index=df.index)
-
     if len(nlp_raw):
         nlp_raw.iloc[-1] = math.log1p(today_count)
 
     df["NLP_War_Intensity_z"] = ewma_zscore(nlp_raw, span=20, clip=clip)
-
-    # --------------------------------------------------------
-    # Sub indices
-    # --------------------------------------------------------
 
     df["Shipping_Stress_Index"] = (
         0.35 * df["Brent_WTI_z"]
@@ -340,10 +250,6 @@ def compute_features(px: pd.DataFrame, news: pd.DataFrame, cfg: dict) -> pd.Data
         + 0.20 * df["Energy_Supply_Stress_Index"]
         + 0.15 * df["Option_Skew_z"]
     ).clip(-clip, clip)
-
-    # --------------------------------------------------------
-    # Final scores
-    # --------------------------------------------------------
 
     df["War_Premium_Score"] = (
         0.22 * df["Shipping_Stress_Index"]
@@ -508,7 +414,7 @@ def make_png(df: pd.DataFrame, out_path: Path) -> None:
 
 def main() -> None:
     cfg = load_config()
-    ensure_dirs(cfg)
+    ensure_dirs()
 
     output_cfg = cfg.get("outputs", {})
 
@@ -518,9 +424,9 @@ def main() -> None:
     output_dir.mkdir(exist_ok=True)
     docs_dir.mkdir(exist_ok=True)
 
-    print("=" * 60)
-    print("Global Energy Stress OS")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info("Global Energy Stress OS")
+    logger.info("=" * 60)
 
     px = fetch_market(cfg)
     news = fetch_headlines(cfg)
@@ -539,7 +445,6 @@ def main() -> None:
     make_markdown(df, news, output_dir / md_name)
     make_html(output_dir / md_name, output_dir / html_name)
 
-    # GitHub Pages mirror
     (docs_dir / "index.html").write_text(
         (output_dir / html_name).read_text(encoding="utf-8"),
         encoding="utf-8",
@@ -550,15 +455,14 @@ def main() -> None:
 
     latest = df.iloc[-1]
 
-    print("Completed.")
-    print("Date:", latest.name.date())
-    print("War Premium Score:", round(float(latest["War_Premium_Score"]), 3))
-    print(
-        "Hormuz Closure Probability:",
-        round(float(latest["Hormuz_Closure_Prob"] * 100), 2),
-        "%",
+    logger.info("Completed.")
+    logger.info("Date: %s", latest.name.date())
+    logger.info("War Premium Score: %.3f", float(latest["War_Premium_Score"]))
+    logger.info(
+        "Hormuz Closure Probability: %.2f %%",
+        float(latest["Hormuz_Closure_Prob"] * 100),
     )
-    print("Regime:", latest["Regime"])
+    logger.info("Regime: %s", latest["Regime"])
 
 
 if __name__ == "__main__":
