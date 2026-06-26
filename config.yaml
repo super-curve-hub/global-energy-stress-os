@@ -1,0 +1,45 @@
+project:
+  name: Global Energy Stress OS
+  timezone: Asia/Tokyo
+  start_date: '2021-01-01'
+
+market:
+  tickers:
+    WTI: CL=F
+    BRENT: BZ=F
+    OVX: ^OVX
+    MOVE: ^MOVE
+    DXY: DX-Y.NYB
+    USDJPY: JPY=X
+    XLE: XLE
+    SPX: ^GSPC
+    GOLD: GC=F
+    COPPER: HG=F
+    VIX: ^VIX
+    VVIX: ^VVIX
+    SKEW: ^SKEW
+
+news:
+  google_queries:
+    - Hormuz Strait oil
+    - Iran oil shipping
+    - Middle East tanker
+    - oil supply disruption
+    - Saudi OSP crude
+    - war risk premium tanker
+  gdelt_queries:
+    - Hormuz Strait
+    - Iran oil
+    - oil supply disruption
+    - Middle East tanker
+  rss_feeds:
+    - https://www.imo.org/en/MediaCentre/PressBriefings/Pages/rss.aspx
+
+model:
+  z_span: 60
+  z_clip: 3.0
+  hormuz_logit_intercept: -1.35
+
+outputs:
+  dir: outputs
+  docs_dir: docs
