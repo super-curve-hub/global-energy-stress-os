@@ -166,7 +166,7 @@ def rss_count(feed_url: str) -> int:
 
 def fetch_headlines(cfg: dict) -> pd.DataFrame:
     rows = []
-    today = pd.Timestamp.utcnow().normalize()
+    today = pd.Timestamp.now("UTC").normalize()
 
     news_cfg = cfg.get("news", {})
 
