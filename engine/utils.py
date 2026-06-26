@@ -48,24 +48,18 @@ def ensure_dirs() -> None:
     """
 
     directories = [
-
         "data/raw",
         "data/cache",
         "data/processed",
-
         "outputs",
-
         "docs",
-
         "logs",
-
     ]
 
     for d in directories:
-
         (ROOT / d).mkdir(
             parents=True,
-            exist_ok=True
+            exist_ok=True,
         )
 
 
@@ -87,27 +81,41 @@ def get_logger() -> logging.Logger:
     logger.setLevel(logging.INFO)
 
     formatter = logging.Formatter(
-
         "%(asctime)s | %(levelname)s | %(message)s"
-
     )
 
-    console = logging.StreamHandler()
+    #
+    # Console
+    #
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
 
-    console.setFormatter(formatter)
+    #
+    # Ensure logs directory exists
+    #
+    log_dir = ROOT / "logs"
 
-    logger.addHandler(console)
+    log_dir.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
 
-    logfile = ROOT / "logs" / "global_energy_stress.log"
+    #
+    # File
+    #
+    logfile = log_dir / "global_energy_stress.log"
 
     file_handler = logging.FileHandler(
         logfile,
-        encoding="utf-8"
+        encoding="utf-8",
     )
 
     file_handler.setFormatter(formatter)
 
     logger.addHandler(file_handler)
+
+    logger.info("Logger initialized.")
 
     return logger
 
